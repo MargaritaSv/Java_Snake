@@ -19,10 +19,11 @@ public class snakeCanvas extends Canvas implements Runnable {
 
     private Thread runThread;
     private Graphics globalGraphycs;
+    private int direction = Direction.NO_DIRECTION;
 
     public void Paint(Graphics g) {
 
-        snake =new LinkedList<Point>();
+        snake = new LinkedList<Point>();
         fruit = new Point();
 
         globalGraphycs = g.create();
@@ -40,6 +41,38 @@ public class snakeCanvas extends Canvas implements Runnable {
 
     public void Move() {
 
+        Point head = snake.peekFirst();
+        Point newPoint = head;
+        switch (direction) {
+            case Direction.NORTH:
+                newPoint = new Point(head.x, head.y - 1);
+                break;
+            case Direction.SOUTH:
+                newPoint = new Point(head.x, head.y + 1);
+                break;
+            case Direction.EAST:
+                newPoint = new Point(head.x + 1, head.y);
+                break;
+            case Direction.WEST:
+                newPoint = new Point(head.x - 1, head.y);
+                break;
+        }
+
+        //remove the tail
+        snake.remove(snake.peekLast());
+
+        if (newPoint.equals(fruit)) {
+//TODO: the snake has hit fruit
+        } else if (newPoint.x < 0 || newPoint.x > GRID_WEIGHT) {
+//TODO: we went oob
+        } else if (newPoint.y < 0 || newPoint.y > GRID_HEIGHT) {
+            //TODO: we went oob
+        } else if (snake.contains(newPoint)) {
+//TODO: we ran int ourself
+        }
+
+        //if we reach this point the we are not dead
+        snake.push(newPoint);
     }
 
     public void DrawGrid(Graphics g) {
@@ -62,7 +95,7 @@ public class snakeCanvas extends Canvas implements Runnable {
 
         g.setColor(Color.GREEN);
         for (Point p : snake) {
-            g.fillRect(p.x, p.y, BOX_WEIGHT, BOX_HEIGHT);
+            g.fillRect(p.x * BOX_WEIGHT, p.y * BOX_HEIGHT, BOX_WEIGHT, BOX_HEIGHT);
         }
 
         g.setColor(Color.BLACK);
@@ -70,7 +103,7 @@ public class snakeCanvas extends Canvas implements Runnable {
 
     public void DrawFruit(Graphics g) {
         g.setColor(Color.RED);
-        g.fillOval(fruit.x, fruit.y, BOX_WEIGHT, BOX_HEIGHT);
+        g.fillOval(fruit.x * BOX_WEIGHT, fruit.y * BOX_HEIGHT, BOX_WEIGHT, BOX_HEIGHT);
     }
 
     @Override
