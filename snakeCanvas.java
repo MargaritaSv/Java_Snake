@@ -1,30 +1,42 @@
 package Snake;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.util.LinkedList;
 
 /**
  * Created by margarita on 2/27/16.
  */
-public class snakeCanvas extends Canvas implements Runnable {
+public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
 
-    private final int BOX_HEIGHT = 5;
-    private final int BOX_WEIGHT = 5;
-    private final int GRID_HEIGHT = 30;
-    private final int GRID_WEIGHT = 30;
+    private final int BOX_HEIGHT = 10;
+    private final int BOX_WEIGHT = 10;
+    private final int GRID_HEIGHT = 50;
+    private final int GRID_WEIGHT = 50;
 
     private LinkedList<Point> snake;
     private Point fruit;
 
     private Thread runThread;
     private Graphics globalGraphycs;
+
     private int direction = Direction.NO_DIRECTION;
+
+    public void init() {
+
+    }
 
     public void Paint(Graphics g) {
 
+        this.setPreferredSize(new Dimension(640, 480));
         snake = new LinkedList<Point>();
-        fruit = new Point();
+        snake.add(new Point(3, 1));
+        snake.add(new Point(3, 2));
+        snake.add(new Point(3, 3));
+        fruit = new Point(0, 0);
+        this.addKeyListener(this);
 
         globalGraphycs = g.create();
         if (runThread == null) {
@@ -34,6 +46,7 @@ public class snakeCanvas extends Canvas implements Runnable {
     }
 
     public void Draw(Graphics g) {
+        g.clearRect(0, 0, BOX_WEIGHT * GRID_WEIGHT, BOX_HEIGHT * GRID_HEIGHT); //for clear the screen if we dont the tail will not resize
         DrawGrid(g);
         DrawSnake(g);
         DrawFruit(g);
@@ -104,6 +117,7 @@ public class snakeCanvas extends Canvas implements Runnable {
     public void DrawFruit(Graphics g) {
         g.setColor(Color.RED);
         g.fillOval(fruit.x * BOX_WEIGHT, fruit.y * BOX_HEIGHT, BOX_WEIGHT, BOX_HEIGHT);
+        g.setColor(Color.BLACK);
     }
 
     @Override
@@ -119,5 +133,33 @@ public class snakeCanvas extends Canvas implements Runnable {
                 ex.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+                direction = Direction.NORTH;
+                break;
+            case KeyEvent.VK_DOWN:
+                direction = Direction.SOUTH;
+                break;
+            case KeyEvent.VK_RIGHT:
+                direction = Direction.EAST;
+                break;
+            case KeyEvent.VK_LEFT:
+                direction = Direction.WEST;
+                break;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }
