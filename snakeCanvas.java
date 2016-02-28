@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * Created by margarita on 2/27/16.
@@ -35,7 +36,7 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
         snake.add(new Point(3, 1));
         snake.add(new Point(3, 2));
         snake.add(new Point(3, 3));
-        fruit = new Point(0, 0);
+        fruit = new Point(10, 10);
         this.addKeyListener(this);
 
         globalGraphycs = g.create();
@@ -75,9 +76,29 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
         snake.remove(snake.peekLast());
 
         if (newPoint.equals(fruit)) {
-//TODO: the snake has hit fruit
+// the snake has hit fruit
+            Point addPoint = (Point) newPoint.clone();
+
+            switch (direction) {
+                case Direction.NORTH:
+                    newPoint = new Point(head.x, head.y - 1);
+                    break;
+                case Direction.SOUTH:
+                    newPoint = new Point(head.x, head.y + 1);
+                    break;
+                case Direction.EAST:
+                    newPoint = new Point(head.x + 1, head.y);
+                    break;
+                case Direction.WEST:
+                    newPoint = new Point(head.x - 1, head.y);
+                    break;
+            }
+            snake.push(addPoint);
+            PlaceFruit();
+
         } else if (newPoint.x < 0 || newPoint.x > GRID_WEIGHT) {
 //TODO: we went oob
+
         } else if (newPoint.y < 0 || newPoint.y > GRID_HEIGHT) {
             //TODO: we went oob
         } else if (snake.contains(newPoint)) {
@@ -118,6 +139,22 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
         g.setColor(Color.RED);
         g.fillOval(fruit.x * BOX_WEIGHT, fruit.y * BOX_HEIGHT, BOX_WEIGHT, BOX_HEIGHT);
         g.setColor(Color.BLACK);
+    }
+
+    public void PlaceFruit() {
+
+        Random rnd = new Random();
+        int randomX = rnd.nextInt(GRID_WEIGHT);
+        int randomY = rnd.nextInt(GRID_HEIGHT);
+
+        Point rndPoint = new Point(randomX, randomY);
+        while (snake.contains(rndPoint)) {
+            randomX = rnd.nextInt(GRID_WEIGHT);
+            randomY = rnd.nextInt(GRID_HEIGHT);
+
+            rndPoint = new Point(randomX, randomY);
+        }
+        fruit = rndPoint;
     }
 
     @Override
