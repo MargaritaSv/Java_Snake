@@ -12,10 +12,10 @@ import java.util.Random;
 public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
 
-    private final int BOX_HEIGHT = 10;
-    private final int BOX_WEIGHT = 10;
-    private final int GRID_HEIGHT = 50;
-    private final int GRID_WEIGHT = 50;
+    private final int BOX_HEIGHT = 15;
+    private final int BOX_WEIGHT = 15;
+    private final int GRID_HEIGHT = 25;
+    private final int GRID_WEIGHT = 25;
 
     private LinkedList<Point> snake;
     private Point fruit;
@@ -33,10 +33,9 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
         this.setPreferredSize(new Dimension(640, 480));
         snake = new LinkedList<Point>();
-        snake.add(new Point(3, 1));
-        snake.add(new Point(3, 2));
-        snake.add(new Point(3, 3));
-        fruit = new Point(10, 10);
+        GeneratedDefaultSnake();
+        PlaceFruit();
+        //fruit = new Point(10, 10);
         this.addKeyListener(this);
 
         globalGraphycs = g.create();
@@ -44,6 +43,16 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
             runThread = new Thread(this);
             runThread.start();
         }
+    }
+
+    public void GeneratedDefaultSnake() {
+
+        snake.clear();
+        snake.add(new Point(0, 2));
+        snake.add(new Point(0, 1));
+        snake.add(new Point(0, 0));
+
+        direction = Direction.NO_DIRECTION;
     }
 
     public void Draw(Graphics g) {
@@ -96,13 +105,17 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
             snake.push(addPoint);
             PlaceFruit();
 
-        } else if (newPoint.x < 0 || newPoint.x > GRID_WEIGHT) {
-//TODO: we went oob
-
-        } else if (newPoint.y < 0 || newPoint.y > GRID_HEIGHT) {
-            //TODO: we went oob
+        } else if (newPoint.x < 0 || newPoint.x > (GRID_WEIGHT - 1)) {
+//we went oob
+            GeneratedDefaultSnake();
+        } else if (newPoint.y < 0 || newPoint.y > (GRID_HEIGHT - 1)) {
+            //we went oob
+            GeneratedDefaultSnake();
+            return;
         } else if (snake.contains(newPoint)) {
-//TODO: we ran int ourself
+//we ran int ourself
+            GeneratedDefaultSnake();
+            return;
         }
 
         //if we reach this point the we are not dead
@@ -181,16 +194,24 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
     public void keyPressed(KeyEvent e) {
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP:
-                direction = Direction.NORTH;
+                if (direction != Direction.SOUTH) {
+                    direction = Direction.NORTH;
+                }
                 break;
             case KeyEvent.VK_DOWN:
-                direction = Direction.SOUTH;
+                if (direction != Direction.NORTH) {
+                    direction = Direction.SOUTH;
+                }
                 break;
             case KeyEvent.VK_RIGHT:
-                direction = Direction.EAST;
+                if (direction != Direction.WEST) {
+                    direction = Direction.EAST;
+                }
                 break;
             case KeyEvent.VK_LEFT:
-                direction = Direction.WEST;
+                if (direction != Direction.EAST) {
+                    direction = Direction.WEST;
+                }
                 break;
         }
     }
