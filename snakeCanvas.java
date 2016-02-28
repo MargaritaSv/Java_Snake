@@ -3,6 +3,7 @@ package Snake;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -25,9 +26,7 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
     private int direction = Direction.NO_DIRECTION;
 
-    public void init() {
-
-    }
+    private int score = 0;
 
     public void Paint(Graphics g) {
 
@@ -47,6 +46,7 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
     public void GeneratedDefaultSnake() {
 
+        score = 0;
         snake.clear();
         snake.add(new Point(0, 2));
         snake.add(new Point(0, 1));
@@ -56,10 +56,18 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
     }
 
     public void Draw(Graphics g) {
-        g.clearRect(0, 0, BOX_WEIGHT * GRID_WEIGHT, BOX_HEIGHT * GRID_HEIGHT); //for clear the screen if we dont the tail will not resize
-        DrawGrid(g);
-        DrawSnake(g);
-        DrawFruit(g);
+        g.clearRect(0, 0, BOX_WEIGHT * GRID_WEIGHT + 10, BOX_HEIGHT * GRID_HEIGHT + 20); //for clear the screen if we dont the tail will not resize
+        //creat new image
+        BufferedImage buffer = new BufferedImage(BOX_WEIGHT * GRID_WEIGHT + 10, BOX_HEIGHT * GRID_HEIGHT + 20, BufferedImage.TYPE_INT_ARGB);
+        Graphics bufferGraphics = buffer.getGraphics();
+
+        DrawSnake(bufferGraphics);
+        DrawGrid(bufferGraphics);
+        DrawFruit(bufferGraphics);
+        DrawScore(bufferGraphics);
+
+        //flip
+        g.drawImage(buffer, 0, 0, BOX_WEIGHT * GRID_WEIGHT + 10, BOX_HEIGHT * GRID_HEIGHT + 20, this);
     }
 
     public void Move() {
@@ -86,6 +94,8 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
         if (newPoint.equals(fruit)) {
 // the snake has hit fruit
+
+            score += 10;
             Point addPoint = (Point) newPoint.clone();
 
             switch (direction) {
@@ -108,6 +118,7 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
         } else if (newPoint.x < 0 || newPoint.x > (GRID_WEIGHT - 1)) {
 //we went oob
             GeneratedDefaultSnake();
+
         } else if (newPoint.y < 0 || newPoint.y > (GRID_HEIGHT - 1)) {
             //we went oob
             GeneratedDefaultSnake();
@@ -120,6 +131,10 @@ public class snakeCanvas extends Canvas implements Runnable, KeyListener {
 
         //if we reach this point the we are not dead
         snake.push(newPoint);
+    }
+
+    public void DrawScore(Graphics g) {
+        g.drawString("Score: " + score, 0, BOX_HEIGHT * GRID_HEIGHT);
     }
 
     public void DrawGrid(Graphics g) {
