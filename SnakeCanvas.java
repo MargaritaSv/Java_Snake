@@ -22,25 +22,56 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
     private Point fruit;
 
     private Thread runThread;
-    private Graphics globalGraphycs;
 
     private int direction = Direction.NO_DIRECTION;
 
     private int score = 0;
 
+    public void unit() {
+
+    }
+
     public void paint(Graphics g) {
 
         this.setPreferredSize(new Dimension(640, 480));
-        snake = new LinkedList<Point>();
-        generatedDefaultSnake();
-        placeFruit();
         this.addKeyListener(this);
 
-        globalGraphycs = g.create();
+        if (snake == null) {
+            snake = new LinkedList<Point>();
+            generatedDefaultSnake();
+            placeFruit();
+
+        }
+
         if (runThread == null) {
             runThread = new Thread(this);
             runThread.start();
         }
+
+        drawSnake(g);
+        drawGrid(g);
+        drawFruit(g);
+        drawScore(g);
+
+
+    }
+
+    public void update(Graphics g) {
+        //this is a default update method which will contain our dubal buffering
+
+        Graphics offScreenGraphics;
+        BufferedImage offscreen = null;
+        Dimension d = this.getSize();
+
+        offscreen = new BufferedImage(d.width, d.height, BufferedImage.TYPE_INT_ARGB);
+        offScreenGraphics = offscreen.getGraphics();
+        offScreenGraphics.setColor(this.getBackground());
+        offScreenGraphics.fillRect(0, 0, d.width, d.height);
+        offScreenGraphics.setColor(this.getForeground()); //paint everything else
+        paint(offScreenGraphics);
+
+        //flip
+        g.drawImage(offscreen, 0, 0, this);
     }
 
     public void generatedDefaultSnake() {
@@ -52,21 +83,6 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
         snake.add(new Point(0, 0));
 
         direction = Direction.NO_DIRECTION;
-    }
-
-    public void draw(Graphics g) {
-        g.clearRect(0, 0, BOX_WIDTH * GRID_WIDTH + 10, BOX_HEIGHT * GRID_HEIGHT + 20); //for clear the screen if we dont the tail will not resize
-        //create new image
-        BufferedImage buffer = new BufferedImage(BOX_WIDTH * GRID_WIDTH + 10, BOX_HEIGHT * GRID_HEIGHT + 20, BufferedImage.TYPE_INT_ARGB);
-        Graphics bufferGraphics = buffer.getGraphics();
-
-        drawSnake(bufferGraphics);
-        drawGrid(bufferGraphics);
-        drawFruit(bufferGraphics);
-        drawScore(bufferGraphics);
-
-        //flip
-        g.drawImage(buffer, 0, 0, BOX_WIDTH * GRID_WIDTH + 10, BOX_HEIGHT * GRID_HEIGHT + 20, this);
     }
 
     public void move() {
@@ -181,8 +197,7 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
     public void run() {
         while (true) {
             move();
-            draw(globalGraphycs);
-
+            repaint();
             try {
                 Thread.currentThread();
                 Thread.sleep(100);
