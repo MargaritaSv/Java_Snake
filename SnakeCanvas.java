@@ -1,9 +1,11 @@
 package Snake;
 
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
+import java.io.*;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -26,6 +28,7 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
     private int direction = Direction.NO_DIRECTION;
 
     private int score = 0;
+    private String highscore = "";
 
     public void unit() {
 
@@ -47,13 +50,15 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
             runThread = new Thread(this);
             runThread.start();
         }
+        if (highscore.equals("")) {
+            //init hight score
+            highscore = this.getHightScoreValue();
+        }
 
         drawSnake(g);
         drawGrid(g);
         drawFruit(g);
         drawScore(g);
-
-
     }
 
     public void update(Graphics g) {
@@ -128,13 +133,16 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
             snake.push(addPoint);
             placeFruit();
         } else if (newPoint.x < 0 || newPoint.x > (GRID_WIDTH - 1)) {
+            checkScore();
             generatedDefaultSnake();
             return;
         } else if (newPoint.y < 0 || newPoint.y > (GRID_HEIGHT - 1)) {
+            checkScore();
             generatedDefaultSnake();
             return;
         } else if (snake.contains(newPoint)) {
             //we ran int yourself
+            checkScore();
             generatedDefaultSnake();
             return;
         }
@@ -142,8 +150,53 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
         snake.push(newPoint);
     }
 
+    public void checkScore() {
+
+        if (highscore.equals("")) {
+            return;
+        }
+
+        //format Magi:100
+        if (score > Integer.parseInt(highscore.split(":")[1])) {
+            //user has set a new record
+            String name = JOptionPane.showInputDialog("What is your name?");
+            highscore = name + ":" + score;
+
+            File scoreFile = new File("hightscore.dat");
+            if (!scoreFile.exists()) {
+                try {
+                    scoreFile.createNewFile();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            FileWriter wr = null;
+            BufferedWriter bfWr = null;
+
+            try {
+                wr = new FileWriter(scoreFile);
+                bfWr = new BufferedWriter(wr);
+                bfWr.write(this.highscore);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+
+                try {
+                    if (bfWr != null) {
+                        bfWr.close();
+                    }
+                } catch (Exception ex) {
+
+                }
+            }
+        }
+    }
+
     public void drawScore(Graphics g) {
-        g.drawString("Score: " + score, 0, BOX_HEIGHT * GRID_HEIGHT);
+
+        g.drawString("Score: " + score, 0, BOX_HEIGHT * GRID_HEIGHT + 10);
+        g.drawString("Highscore: " + highscore, 0, BOX_HEIGHT * GRID_HEIGHT + 20);
     }
 
     public void drawGrid(Graphics g) {
@@ -202,6 +255,31 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
                 Thread.currentThread();
                 Thread.sleep(100);
             } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
+    public String getHightScoreValue() {
+
+        //format: Magi:100
+        FileReader readFile = null;
+        BufferedReader rd = null;
+
+        try {
+            readFile = new FileReader("hightscore.dat");
+            rd = new BufferedReader(readFile);
+            return rd.readLine();
+
+        } catch (Exception ex) {
+            return "0";
+        } finally {
+            try {
+                if (readFile != null) {
+                    rd.close();
+
+                }
+            } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
