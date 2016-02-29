@@ -6,13 +6,13 @@ import java.awt.*;
 /**
  * Created by margarita on 2/28/16.
  */
-public class snakeApplet extends Applet {
+public class SnakeApplet extends Applet {
 
-    private snakeCanvas c;
+    private SnakeCanvas c;
 
     public void init() {
-        c = new snakeCanvas();
-        c.setPreferredSize(new Dimension(640,480));
+        c = new SnakeCanvas();
+        c.setPreferredSize(new Dimension(640, 480));
         c.setVisible(true);
         c.setFocusable(true);
         this.add(c);
@@ -20,7 +20,7 @@ public class snakeApplet extends Applet {
         this.setSize(new Dimension(640, 480));
     }
 
-    public void Paint(Graphics g) {
+    public void paint(Graphics g) {
         this.setSize(new Dimension(640, 480));
     }
 }
