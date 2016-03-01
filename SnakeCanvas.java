@@ -6,6 +6,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.*;
+import java.net.URL;
 import java.util.LinkedList;
 import java.util.Random;
 
@@ -30,35 +31,82 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
     private int score = 0;
     private String highscore = "";
 
+    private boolean isInMenu = true;
+    private Image menuImage;
+    private boolean isAnTheGame = false;
+    private boolean won = true;
+
     public void unit() {
 
     }
 
     public void paint(Graphics g) {
 
-        this.setPreferredSize(new Dimension(640, 480));
-        this.addKeyListener(this);
-
-        if (snake == null) {
-            snake = new LinkedList<Point>();
-            generatedDefaultSnake();
-            placeFruit();
-
-        }
-
         if (runThread == null) {
+
+            this.setPreferredSize(new Dimension(640, 480));
+            this.addKeyListener(this);
+
             runThread = new Thread(this);
             runThread.start();
         }
-        if (highscore.equals("")) {
-            //init hight score
-            highscore = this.getHightScoreValue();
+
+        if (isInMenu) {
+            //draw the menu
+            drawMenu(g);
+
+        } else if (isAnTheGame) {
+            //draw the and game screen
+            drawEndGame(g);
+        } else {
+            //draw everything else
+            if (snake == null) {
+                snake = new LinkedList<Point>();
+                generatedDefaultSnake();
+                placeFruit();
+            }
+
+            if (highscore.equals("")) {
+                //init hight score
+                highscore = this.getHightScoreValue();
+            }
+            drawSnake(g);
+            drawGrid(g);
+            drawFruit(g);
+            drawScore(g);
+        }
+    }
+
+    public void drawEndGame(Graphics g) {
+        BufferedImage endImage = new BufferedImage(this.getPreferredSize().width, this.getPreferredSize().height, BufferedImage.TYPE_INT_ARGB);
+        Graphics endGraphics = endImage.getGraphics();
+        endGraphics.setColor(Color.BLACK);
+
+        if (won) {
+            endGraphics.drawString("You win!", this.getPreferredSize().width / 2, this.getPreferredSize().height / 2);
+        } else {
+            endGraphics.drawString("You lose!", this.getPreferredSize().width / 2, this.getPreferredSize().height / 2);
+        }
+        endGraphics.drawString("Your score: " + score, this.getPreferredSize().width / 2, (this.getPreferredSize().height / 2) + 20);
+        endGraphics.drawString("Press \"space \" to start new game", this.getPreferredSize().width / 2, (this.getPreferredSize().height / 2) + 40);
+        g.drawImage(endImage, 0, 0, this);
+    }
+
+    public void drawMenu(Graphics g) {
+
+        if (this.menuImage == null) {
+            try {
+                URL imagePath = SnakeCanvas.class.getResource("snakeMenu.png");
+                menuImage = Toolkit.getDefaultToolkit().getImage(imagePath);
+
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
 
-        drawSnake(g);
-        drawGrid(g);
-        drawFruit(g);
-        drawScore(g);
+        //  Image menuImage = null;
+
+        g.drawImage(menuImage, 0, 0, 640, 480, this);
     }
 
     public void update(Graphics g) {
@@ -92,8 +140,50 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
 
     public void move() {
 
+        if (direction != Direction.NO_DIRECTION) {
+            return;
+        }
         Point head = snake.peekFirst();
         Point newPoint = head;
+
+        newPoint = moveDirection(head, newPoint);
+
+        //remove the tail
+        if (this.direction != Direction.NO_DIRECTION) {
+            snake.remove(snake.peekLast());
+        }
+
+        if (newPoint.equals(fruit)) {
+            // the snake has hit fruit
+            score += 10;
+            Point addPoint = (Point) newPoint.clone();
+            newPoint = moveDirection(head, newPoint);
+            snake.push(addPoint);
+            placeFruit();
+        } else if ((newPoint.x < 0 || newPoint.x > (GRID_WIDTH - 1)) || (newPoint.y < 0 || newPoint.y > (GRID_HEIGHT - 1))) {
+            checkScore();
+            won = false;
+            isAnTheGame = true;
+            return;
+
+        } else if (snake.contains(newPoint)) {
+            //we ran eat yourself
+            checkScore();
+            won = false;
+            isAnTheGame = true;
+            return;
+
+        } else if (snake.size() == (GRID_HEIGHT * GRID_WIDTH)) {
+            //we won!
+            checkScore();
+            won = true;
+            isAnTheGame = true;
+        }
+        //if we reach this point the we are not dead
+        snake.push(newPoint);
+    }
+
+    private Point moveDirection(Point head, Point newPoint) {
         switch (direction) {
             case Direction.NORTH:
                 newPoint = new Point(head.x, head.y - 1);
@@ -108,49 +198,10 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
                 newPoint = new Point(head.x - 1, head.y);
                 break;
         }
-        //remove the tail
-        snake.remove(snake.peekLast());
-
-        if (newPoint.equals(fruit)) {
-// the snake has hit fruit
-            score += 10;
-            Point addPoint = (Point) newPoint.clone();
-
-            switch (direction) {
-                case Direction.NORTH:
-                    newPoint = new Point(head.x, head.y - 1);
-                    break;
-                case Direction.SOUTH:
-                    newPoint = new Point(head.x, head.y + 1);
-                    break;
-                case Direction.EAST:
-                    newPoint = new Point(head.x + 1, head.y);
-                    break;
-                case Direction.WEST:
-                    newPoint = new Point(head.x - 1, head.y);
-                    break;
-            }
-            snake.push(addPoint);
-            placeFruit();
-        } else if (newPoint.x < 0 || newPoint.x > (GRID_WIDTH - 1)) {
-            checkScore();
-            generatedDefaultSnake();
-            return;
-        } else if (newPoint.y < 0 || newPoint.y > (GRID_HEIGHT - 1)) {
-            checkScore();
-            generatedDefaultSnake();
-            return;
-        } else if (snake.contains(newPoint)) {
-            //we ran int yourself
-            checkScore();
-            generatedDefaultSnake();
-            return;
-        }
-        //if we reach this point the we are not dead
-        snake.push(newPoint);
+        return newPoint;
     }
 
-    public void checkScore() {
+    private void checkScore() {
 
         if (highscore.equals("")) {
             return;
@@ -231,7 +282,7 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
         g.setColor(Color.BLACK);
     }
 
-    public void placeFruit() {
+    private void placeFruit() {
 
         Random rnd = new Random();
         int randomX = rnd.nextInt(GRID_WIDTH);
@@ -249,8 +300,11 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
     @Override
     public void run() {
         while (true) {
-            move();
             repaint();
+            if (!isInMenu && !isAnTheGame) {
+                move();
+            }
+
             try {
                 Thread.currentThread();
                 Thread.sleep(100);
@@ -260,7 +314,7 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
         }
     }
 
-    public String getHightScoreValue() {
+    protected String getHightScoreValue() {
 
         //format: Magi:100
         FileReader readFile = null;
@@ -311,6 +365,22 @@ public class SnakeCanvas extends Canvas implements Runnable, KeyListener {
             case KeyEvent.VK_LEFT:
                 if (direction != Direction.EAST) {
                     direction = Direction.WEST;
+                }
+                break;
+            case KeyEvent.VK_ENTER:
+                if (isInMenu) {
+                    isInMenu = false;
+                    repaint();
+                }
+                break;
+            case KeyEvent.VK_ESCAPE:
+                isInMenu = true;
+                break;
+            case KeyEvent.VK_SPACE:
+                if (isAnTheGame) {
+                    isAnTheGame = false;
+                    won = false;
+                    generatedDefaultSnake();
                 }
                 break;
         }
